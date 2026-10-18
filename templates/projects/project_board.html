@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Board: {{ project.title }} | TaskFlow{% endblock %}
+
+{% block content %}
+<!-- Board Header -->
+<div class="page-header" style="margin-bottom: 1rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem;">
+      <a href="{% url 'project_detail' project.id %}" style="font-size: 0.88rem; color: var(--text-muted);">
+        📁 {{ project.title }}
+      </a>
+      <span class="badge badge-status-{{ project.status }}">{{ project.get_status_display }}</span>
+    </div>
+    <h1 class="page-title">{{ project.title }} Board</h1>
+  </div>
+  <div class="header-actions">
+    <button type="button" class="btn btn-primary" onclick="openModal('quickTaskModal')">
+      <span>＋</span> Add Task
+    </button>
+    <a href="{% url 'project_members' project.id %}" class="btn btn-secondary">
+      <span>👥</span> Team
+    </a>
+    <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary">
+      <span>⚙️</span> Settings
+    </a>
+  </div>
+</div>
+
+<!-- Board Filters & Progress Bar -->
+<div class="board-header">
+  <form method="GET" class="board-filter-bar">
+    <div style="position: relative; min-width: 200px;">
+      <input type="text" name="q" value="{{ filter_query }}" placeholder="Filter cards by title..." class="form-input" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+    </div>
+
+    <select name="assignee" class="form-select" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+      <option value="">All Assignees</option>
+      <option value="unassigned" {% if filter_assignee == 'unassigned' %}selected{% endif %}>Unassigned</option>
+      {% for m in members %}
+        <option value="{{ m.id }}" {% if filter_assignee == m.id|stringformat:"s" %}selected{% endif %}>{{ m.username }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="priority" class="form-select" style="width: auto; padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+      <option value="">All Priorities</option>
+      {% for code, label in PRIORITY_CHOICES %}
+        <option value="{{ code }}" {% if filter_priority == code %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit" class="btn btn-secondary btn-sm">Apply</button>
+    {% if filter_query or filter_assignee or filter_priority %}
+      <a href="{% url 'project_board' project.id %}" class="btn btn-secondary btn-sm" style="color: var(--danger);">Reset</a>
+    {% endif %}
+  </form>
+
+  <!-- Real-time Progress Indicator -->
+  <div style="display: flex; align-items: center; gap: 0.75rem; min-width: 220px;">
+    <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">
+      Progress: <span class="project-progress-text">{{ project.progress_percentage }}%</span>
+    </div>
+    <div class="progress-bar-bg" style="width: 140px;">
+      <div class="progress-bar-fill project-progress-fill" style="width: {{ project.progress_percentage }}%;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Kanban Columns Grid -->
+<div class="board-columns">
+  <!-- Column 1: To Do -->
+  <div class="kanban-column" data-status="todo">
+    <div class="column-header">
+      <div class="column-title-group">
+        <span class="column-dot dot-todo"></span>
+        <span class="column-title">To Do</span>
+        <span class="column-count">{{ todo_tasks|length }}</span>
+      </div>
+      <a href="{% url 'task_create' project.id %}?status=todo" class="icon-btn" style="width: 28px; height: 28px; font-size: 0.9rem;" title="Add task to To Do">＋</a>
+    </div>
+
+    <div class="column-body">
+      {% for task in todo_tasks %}
+        {% include 'projects/includes/task_card.html' with task=task %}
+      {% empty %}
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-light); font-size: 0.85rem;">
+          No tasks in To Do. Drag cards here or click ＋.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Column 2: In Progress -->
+  <div class="kanban-column" data-status="in_progress">
+    <div class="column-header">
+      <div class="column-title-group">
+        <span class="column-dot dot-progress"></span>
+        <span class="column-title">In Progress</span>
+        <span class="column-count">{{ in_progress_tasks|length }}</span>
+      </div>
+      <a href="{% url 'task_create' project.id %}?status=in_progress" class="icon-btn" style="width: 28px; height: 28px; font-size: 0.9rem;" title="Add task to In Progress">＋</a>
+    </div>
+
+    <div class="column-body">
+      {% for task in in_progress_tasks %}
+        {% include 'projects/includes/task_card.html' with task=task %}
+      {% empty %}
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-light); font-size: 0.85rem;">
+          No tasks in progress. Drag cards here to begin work.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Column 3: Completed -->
+  <div class="kanban-column" data-status="completed">
+    <div class="column-header">
+      <div class="column-title-group">
+        <span class="column-dot dot-completed"></span>
+        <span class="column-title">Completed</span>
+        <span class="column-count">{{ completed_tasks|length }}</span>
+      </div>
+      <a href="{% url 'task_create' project.id %}?status=completed" class="icon-btn" style="width: 28px; height: 28px; font-size: 0.9rem;" title="Add task to Completed">＋</a>
+    </div>
+
+    <div class="column-body">
+      {% for task in completed_tasks %}
+        {% include 'projects/includes/task_card.html' with task=task %}
+      {% empty %}
+        <div style="text-align: center; padding: 2rem 1rem; color: var(--text-light); font-size: 0.85rem;">
+          No completed tasks yet. Finish a task and drop it here!
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Quick Task Creation Modal -->
+<dialog id="quickTaskModal">
+  <div class="modal-header">
+    <h2 class="modal-title">Create New Task</h2>
+    <button type="button" class="alert-close" onclick="closeModal('quickTaskModal')">&times;</button>
+  </div>
+  <form action="{% url 'task_create' project.id %}" method="POST">
+    {% csrf_token %}
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Task Title *</label>
+        {{ quick_task_form.title }}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        {{ quick_task_form.description }}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Assignee</label>
+          {{ quick_task_form.assignee }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Initial Status</label>
+          {{ quick_task_form.status }}
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          {{ quick_task_form.priority }}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          {{ quick_task_form.due_date }}
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('quickTaskModal')">Cancel</button>
+      <button type="submit" class="btn btn-primary">Create Task</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

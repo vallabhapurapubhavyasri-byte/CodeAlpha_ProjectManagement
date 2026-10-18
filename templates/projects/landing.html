@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}TaskFlow — Modern Collaborative Project Management{% endblock %}
+
+{% block public_content %}
+<header style="padding: 1.25rem 2.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; background: #ffffff;">
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <div class="brand-icon">TF</div>
+    <span style="font-weight: 800; font-size: 1.3rem; color: #0f172a; letter-spacing: -0.02em;">TaskFlow</span>
+  </div>
+  <div style="display: flex; align-items: center; gap: 1rem;">
+    <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">Log In</a>
+    <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Get Started Free</a>
+  </div>
+</header>
+
+<main style="flex-grow: 1;">
+  <!-- Hero Section -->
+  <section style="text-align: center; padding: 5rem 1.5rem 3.5rem; max-width: 900px; margin: 0 auto;">
+    <div style="display: inline-block; padding: 0.35rem 0.9rem; background: #eff6ff; color: #2563eb; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; margin-bottom: 1.25rem; border: 1px solid #dbeafe;">
+      ⚡ CodeAlpha Full Stack Development Internship — Task 3
+    </div>
+    <h1 style="font-size: 3rem; font-weight: 800; line-height: 1.15; color: #0f172a; margin-bottom: 1.25rem; letter-spacing: -0.03em;">
+      Manage Team Projects with Clarity, Speed, and Focus.
+    </h1>
+    <p style="font-size: 1.2rem; color: #475569; max-width: 680px; margin: 0 auto 2.5rem; line-height: 1.6;">
+      TaskFlow brings group project boards, task assignment, instant discussions, and notification tracking together into one lightweight, intuitive workspace.
+    </p>
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+      <a href="{% url 'register' %}" class="btn btn-primary btn-lg" style="box-shadow: 0 4px 14px rgba(37,99,235,0.35);">
+        Create Your Free Account →
+      </a>
+      <a href="{% url 'login' %}" class="btn btn-secondary btn-lg">
+        Sign In to Dashboard
+      </a>
+    </div>
+  </section>
+
+  <!-- Live Board Preview / Feature Showcase -->
+  <section style="max-width: 1050px; margin: 0 auto 5rem; padding: 0 1.5rem;">
+    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.05); overflow: hidden;">
+      <div style="background: #0f172a; padding: 0.85rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; gap: 0.4rem;">
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; display: inline-block;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #f59e0b; display: inline-block;"></span>
+          <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+        </div>
+        <span style="color: #94a3b8; font-size: 0.82rem; font-weight: 500;">TaskFlow Kanban Board — Web Platform V1</span>
+        <div></div>
+      </div>
+
+      <!-- Preview Mockup Board -->
+      <div style="padding: 1.5rem; background: #f8fafc; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem;">
+        <!-- Col 1 -->
+        <div style="background: #f1f5f9; border-radius: 10px; padding: 1rem; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-weight: 700; font-size: 0.9rem;">
+            <span>To Do</span>
+            <span style="background: #e2e8f0; padding: 0.1rem 0.5rem; border-radius: 9999px; font-size: 0.75rem;">2</span>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 0.85rem; border: 1px solid #e2e8f0; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span class="badge badge-medium">Medium</span>
+              <span style="font-size: 0.75rem; color: #64748b;">May 24</span>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a;">Cross-browser test execution</div>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 0.85rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span class="badge badge-low">Low</span>
+              <span style="font-size: 0.75rem; color: #64748b;">May 28</span>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a;">Deploy staging environment</div>
+          </div>
+        </div>
+
+        <!-- Col 2 -->
+        <div style="background: #f1f5f9; border-radius: 10px; padding: 1rem; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-weight: 700; font-size: 0.9rem;">
+            <span>In Progress</span>
+            <span style="background: #dbeafe; color: #1d4ed8; padding: 0.1rem 0.5rem; border-radius: 9999px; font-size: 0.75rem;">1</span>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 0.85rem; border: 1px solid #93c5fd; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.1);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span class="badge badge-urgent">Urgent</span>
+              <span style="font-size: 0.75rem; color: #dc2626; font-weight: 600;">Tomorrow</span>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a;">Drag-and-drop task movements</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; font-size: 0.75rem; color: #64748b;">
+              <span>💬 3 comments</span>
+              <div class="user-avatar user-avatar-sm" style="background-color: #2563EB;">SC</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 3 -->
+        <div style="background: #f1f5f9; border-radius: 10px; padding: 1rem; border: 1px solid #e2e8f0;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-weight: 700; font-size: 0.9rem;">
+            <span>Completed</span>
+            <span style="background: #dcfce7; color: #15803d; padding: 0.1rem 0.5rem; border-radius: 9999px; font-size: 0.75rem;">2</span>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 0.85rem; border: 1px solid #e2e8f0; opacity: 0.85; margin-bottom: 0.75rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span class="badge badge-high">High</span>
+              <span style="font-size: 0.75rem; color: #10b981;">✓ Done</span>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a; text-decoration: line-through;">High-fidelity Figma UI mockups</div>
+          </div>
+          <div style="background: #fff; border-radius: 8px; padding: 0.85rem; border: 1px solid #e2e8f0; opacity: 0.85;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem;">
+              <span class="badge badge-urgent">Urgent</span>
+              <span style="font-size: 0.75rem; color: #10b981;">✓ Done</span>
+            </div>
+            <div style="font-weight: 600; font-size: 0.9rem; color: #0f172a; text-decoration: line-through;">Database schema & migrations</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Pillars -->
+  <section style="max-width: 1050px; margin: 0 auto 5rem; padding: 0 1.5rem;">
+    <h2 style="text-align: center; font-size: 2rem; font-weight: 800; color: #0f172a; margin-bottom: 2.5rem;">
+      Engineered for Seamless Team Collaboration
+    </h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">👥</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a;">Group Project Workspaces</h3>
+        <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">
+          Create projects, add team members with granular roles (Admin, Member, Viewer), and prevent unauthorized access.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">📋</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a;">Visual Kanban Boards</h3>
+        <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">
+          Move tasks smoothly between To Do, In Progress, and Completed using intuitive drag-and-drop or accessible controls.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">💬</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a;">Task Discussions</h3>
+        <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">
+          Keep team communication centralized inside tasks with chronological comments, updates, and author timestamps.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">🔔</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a;">Smart Notifications</h3>
+        <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">
+          Stay informed whenever you are added to a project, assigned a task, mentioned in a discussion, or when status updates.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">🎯</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a;">My Tasks Overview</h3>
+        <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">
+          Unified view of all assignments across every project with deadline tracking, urgency filters, and overdue warnings.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">🛡️</div>
+        <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a;">Secure & Tested</h3>
+        <p style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">
+          Django authentication, CSRF tokens, server-side permission verification, and automated test coverage.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer style="padding: 2.5rem 1.5rem; text-align: center; border-top: 1px solid #e2e8f0; background: #ffffff; color: #64748b; font-size: 0.88rem;">
+  <div style="font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;">TaskFlow — CodeAlpha Project Management Tool</div>
+  <div>Built with Python, Django, HTML5, CSS3, and JavaScript</div>
+</footer>
+{% endblock %}

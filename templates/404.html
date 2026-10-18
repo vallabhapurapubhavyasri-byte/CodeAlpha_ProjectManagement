@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found (404) | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="empty-state" style="max-width: 500px; margin: 4rem auto;">
+  <div class="empty-state-icon">🧭</div>
+  <h1 class="empty-state-title">Page Not Found</h1>
+  <p class="empty-state-text">
+    The page or project you're looking for doesn't exist or you don't have permission to access it.
+  </p>
+  <div style="display: flex; justify-content: center; gap: 1rem;">
+    <a href="{% url 'dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+    <a href="{% url 'project_list' %}" class="btn btn-secondary">View Projects</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block public_content %}
+<div style="text-align: center; padding: 6rem 1.5rem; max-width: 480px; margin: 0 auto;">
+  <div style="font-size: 3.5rem; margin-bottom: 1rem;">🧭</div>
+  <h1 style="font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Page Not Found (404)</h1>
+  <p style="color: #64748b; margin-bottom: 2rem;">The requested link does not exist or requires authentication.</p>
+  <a href="{% url 'landing' %}" class="btn btn-primary">Return Home</a>
+</div>
+{% endblock %}

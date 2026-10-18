@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | TaskFlow{% endblock %}
+
+{% block public_content %}
+<div style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem 1.5rem; background: #f8fafc;">
+  <div style="margin-bottom: 2rem; text-align: center;">
+    <a href="{% url 'landing' %}" style="display: inline-flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+      <div class="brand-icon" style="width: 42px; height: 42px; font-size: 1.25rem;">TF</div>
+      <span style="font-weight: 800; font-size: 1.6rem; color: #0f172a;">TaskFlow</span>
+    </a>
+    <p style="color: #64748b; font-size: 0.95rem; margin-top: 0.35rem;">Create your team account to start collaborating</p>
+  </div>
+
+  <div class="card" style="width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); border-color: #cbd5e1;">
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.first_name.id_for_label }}">First name</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}
+            <div class="form-error">{{ form.first_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.last_name.id_for_label }}">Last name</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}
+            <div class="form-error">{{ form.last_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <div class="form-error">{{ form.username.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.email.id_for_label }}">Email address</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <div class="form-error">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.job_title.id_for_label }}">Job role or title (optional)</label>
+        {{ form.job_title }}
+        {% if form.job_title.errors %}
+          <div class="form-error">{{ form.job_title.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <div class="form-error">{{ form.password.errors.0 }}</div>
+        {% endif %}
+        <div class="form-help">Must be at least 6 characters.</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password_confirm.id_for_label }}">Confirm password</label>
+        {{ form.password_confirm }}
+        {% if form.password_confirm.errors %}
+          <div class="form-error">{{ form.password_confirm.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem; margin-top: 0.5rem;">
+        Create Account
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: #64748b;">
+      Already have an account? <a href="{% url 'login' %}" style="font-weight: 600;">Sign in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

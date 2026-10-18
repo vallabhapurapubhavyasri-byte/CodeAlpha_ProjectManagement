@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Project | TaskFlow{% endblock %}
+
+{% block content %}
+<div style="max-width: 520px; margin: 3rem auto;">
+  <div class="card" style="border-color: var(--danger-border); box-shadow: var(--shadow-lg);">
+    <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">⚠️</div>
+    <h1 style="font-size: 1.35rem; font-weight: 700; color: #991b1b; text-align: center; margin-bottom: 0.75rem;">
+      Delete Project Confirmation
+    </h1>
+    <p style="color: var(--text-secondary); text-align: center; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">
+      Are you sure you want to permanently delete <strong>"{{ project.title }}"</strong>?
+      This will also remove all <strong>{{ project.total_tasks_count }} tasks</strong>, comments, and member associations.
+      This action cannot be undone.
+    </p>
+
+    <form method="POST">
+      {% csrf_token %}
+      <div style="display: flex; justify-content: center; gap: 1rem;">
+        <a href="{% url 'project_detail' project.id %}" class="btn btn-secondary">
+          Cancel, Keep Project
+        </a>
+        <button type="submit" class="btn btn-danger">
+          Yes, Delete Project
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

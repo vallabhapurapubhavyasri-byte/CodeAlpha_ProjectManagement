@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ project.title }} | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+      <span class="badge badge-status-{{ project.status }}">{{ project.get_status_display }}</span>
+      <span class="badge badge-medium">Role: {{ user_role }}</span>
+    </div>
+    <h1 class="page-title">{{ project.title }}</h1>
+    <p class="page-subtitle">Created by <strong>{{ project.owner.username }}</strong> on {{ project.created_at|date:"M d, Y" }}</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'project_board' project.id %}" class="btn btn-primary">
+      <span>📋</span> Kanban Board
+    </a>
+    <a href="{% url 'project_members' project.id %}" class="btn btn-secondary">
+      <span>👥</span> Team Members ({{ memberships|length|add:"1" }})
+    </a>
+    {% if can_manage %}
+      <a href="{% url 'project_edit' project.id %}" class="btn btn-secondary" title="Edit Settings">
+        <span>⚙️</span> Edit
+      </a>
+    {% endif %}
+    {% if is_owner %}
+      <a href="{% url 'project_delete' project.id %}" class="btn btn-outline-danger" title="Delete Project">
+        <span>🗑️</span> Delete
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stat-grid" style="margin-bottom: 2rem;">
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-blue">📊</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ project.total_tasks_count }}</div>
+      <div class="stat-label">Total Tasks</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-green">✓</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ project.completed_tasks_count }}</div>
+      <div class="stat-label">Completed Tasks</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-purple">📈</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ project.progress_percentage }}%</div>
+      <div class="stat-label">Progress Rate</div>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-amber">👥</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ memberships|length|add:"1" }}</div>
+      <div class="stat-label">Total Team Members</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Split: Description & Recent Tasks vs Team Members -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+  <!-- Left Side: Description & Tasks -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    <!-- Project Description -->
+    <div class="card">
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary);">About Project</h2>
+      <p style="color: var(--text-secondary); line-height: 1.6; white-space: pre-line;">
+        {{ project.description|default:"No description has been added for this project yet." }}
+      </p>
+
+      <div style="margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">
+          Last updated: {{ project.updated_at|timesince }} ago
+        </span>
+        <a href="{% url 'task_create' project.id %}" class="btn btn-primary btn-sm">
+          <span>＋</span> Add Task to Project
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Tasks In This Project -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Project Tasks</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Recent items tracked in this workspace</p>
+        </div>
+        <a href="{% url 'project_board' project.id %}" class="btn btn-secondary btn-sm">View Board</a>
+      </div>
+
+      {% if recent_tasks %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for t in recent_tasks %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="badge badge-{{ t.priority }}">{{ t.get_priority_display }}</span>
+                <div>
+                  <a href="{% url 'task_detail' t.id %}" style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">
+                    {{ t.title }}
+                  </a>
+                  <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 0.75rem; margin-top: 0.2rem;">
+                    <span>Status: <strong>{{ t.get_status_display }}</strong></span>
+                    <span>Assignee: <strong>{{ t.assignee.username|default:"Unassigned" }}</strong></span>
+                    <span>💬 {{ t.comment_count }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {% if t.due_date %}
+                  <span class="due-pill {% if t.is_overdue %}overdue{% elif t.is_due_soon %}soon{% endif %}">
+                    📅 {{ t.due_date|date:"M d" }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding: 2rem;">
+          <p class="empty-state-text">No tasks created yet for this project.</p>
+          <a href="{% url 'task_create' project.id %}" class="btn btn-primary btn-sm">Create First Task</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Side: Team Members Panel -->
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Team Members</h2>
+      <a href="{% url 'project_members' project.id %}" class="btn btn-secondary btn-sm">Manage</a>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <!-- Project Owner -->
+      <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; background: #eff6ff; border-radius: var(--radius-md); border: 1px solid #bfdbfe;">
+        <div class="user-avatar" style="background-color: {{ project.owner.profile.avatar_color|default:'#2563EB' }};">
+          {{ project.owner.profile.initials|default:project.owner.username|slice:":2"|upper }}
+        </div>
+        <div style="flex-grow: 1; min-width: 0;">
+          <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            {{ project.owner.get_full_name|default:project.owner.username }}
+          </div>
+          <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600;">Project Owner 👑</div>
+        </div>
+      </div>
+
+      <!-- Other Members -->
+      {% for m in memberships %}
+        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: #ffffff;">
+          <div class="user-avatar" style="background-color: {{ m.user.profile.avatar_color|default:'#4F46E5' }};">
+            {{ m.user.profile.initials|default:m.user.username|slice:":2"|upper }}
+          </div>
+          <div style="flex-grow: 1; min-width: 0;">
+            <div style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              {{ m.user.get_full_name|default:m.user.username }}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">
+              {{ m.get_role_display }} · Joined {{ m.joined_at|date:"M d" }}
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1rem 0;">
+          No additional members added yet. Invite your colleagues to collaborate!
+        </p>
+      {% endfor %}
+    </div>
+
+    {% if can_manage %}
+      <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <a href="{% url 'project_members' project.id %}" class="btn btn-secondary btn-sm" style="width: 100%;">
+          <span>＋</span> Add Members
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

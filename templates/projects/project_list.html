@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Project Workspaces</h1>
+    <p class="page-subtitle">Collaborate with your team across organized group projects.</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'project_create' %}" class="btn btn-primary">
+      <span>＋</span> New Project
+    </a>
+  </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="card" style="margin-bottom: 2rem; padding: 1.25rem;">
+  <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; flex-grow: 1; max-width: 650px;">
+      <div style="position: relative; flex-grow: 1; min-width: 220px;">
+        <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-light);">🔍</span>
+        <input type="text" name="q" value="{{ query }}" class="form-input" placeholder="Search projects by title or description..." style="padding-left: 2.25rem;">
+      </div>
+
+      <select name="status" class="form-select" style="width: auto; min-width: 140px;">
+        <option value="">All Statuses</option>
+        {% for code, label in STATUS_CHOICES %}
+          <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+      {% if query or status_filter or scope != 'all' %}
+        <a href="{% url 'project_list' %}" class="btn btn-secondary btn-sm" style="color: var(--danger);">Reset</a>
+      {% endif %}
+    </div>
+
+    <!-- Scope Pills -->
+    <div style="display: flex; gap: 0.35rem; background: #f1f5f9; padding: 0.25rem; border-radius: var(--radius-md);">
+      <a href="?scope=all{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm {% if scope == 'all' %}btn-primary{% else %}btn-secondary{% endif %}" style="border: none; padding: 0.35rem 0.75rem;">All</a>
+      <a href="?scope=owned{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm {% if scope == 'owned' %}btn-primary{% else %}btn-secondary{% endif %}" style="border: none; padding: 0.35rem 0.75rem;">Owned by Me</a>
+      <a href="?scope=member{% if query %}&q={{ query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-sm {% if scope == 'member' %}btn-primary{% else %}btn-secondary{% endif %}" style="border: none; padding: 0.35rem 0.75rem;">Shared with Me</a>
+    </div>
+  </form>
+</div>
+
+<!-- Project Cards Grid -->
+{% load project_tags %}
+{% if projects %}
+  <div class="projects-grid">
+    {% for p in projects %}
+      <div class="project-card">
+        <div class="project-card-header">
+          <span class="badge badge-status-{{ p.status }}">{{ p.get_status_display }}</span>
+          <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">
+            {% if p.owner == user %}👑 Project Owner{% else %}👤 {{ p|user_role:user }}{% endif %}
+          </span>
+        </div>
+
+        <h2 class="project-card-title">
+          <a href="{% url 'project_board' p.id %}">{{ p.title }}</a>
+        </h2>
+
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.4rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; flex-grow: 1;">
+          {{ p.description|default:"No description provided." }}
+        </p>
+
+        <!-- Progress Bar -->
+        <div class="project-progress-wrapper">
+          <div class="progress-header">
+            <span>Completion Rate</span>
+            <span>{{ p.completed_tasks_count }}/{{ p.total_tasks_count }} tasks ({{ p.progress_percentage }}%)</span>
+          </div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" style="width: {{ p.progress_percentage }}%;"></div>
+          </div>
+        </div>
+
+        <!-- Footer Meta and Links -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 1rem; margin-top: 0.5rem; font-size: 0.82rem;">
+          <div style="color: var(--text-muted);">
+            Owner: <strong>{{ p.owner.username }}</strong>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="{% url 'project_detail' p.id %}" class="btn btn-secondary btn-sm" title="Project Details & Settings">Details</a>
+            <a href="{% url 'project_board' p.id %}" class="btn btn-primary btn-sm">Board →</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📁</div>
+    <h2 class="empty-state-title">No projects found</h2>
+    <p class="empty-state-text">
+      {% if query or status_filter %}
+        No projects matched your search criteria. Try adjusting your query or reset filters.
+      {% else %}
+        You do not have any accessible projects right now. Create one to begin organizing your tasks!
+      {% endif %}
+    </p>
+    {% if query or status_filter %}
+      <a href="{% url 'project_list' %}" class="btn btn-secondary">Clear Filters</a>
+    {% else %}
+      <a href="{% url 'project_create' %}" class="btn btn-primary">Create New Project</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

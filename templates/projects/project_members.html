@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Members — {{ project.title }} | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{% url 'project_detail' project.id %}" style="font-size: 0.88rem; color: var(--text-muted);">
+      ← Back to {{ project.title }}
+    </a>
+    <h1 class="page-title" style="margin-top: 0.35rem;">Team & Members</h1>
+    <p class="page-subtitle">Manage collaborative permissions and assignees for <strong>{{ project.title }}</strong></p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'project_board' project.id %}" class="btn btn-secondary">
+      <span>📋</span> View Board
+    </a>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+  <!-- Left Side: Members List -->
+  <div class="card">
+    <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--text-primary);">
+      Project Members ({{ memberships|length|add:"1" }})
+    </h2>
+
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+      <!-- Project Owner -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; background: #eff6ff; border-radius: var(--radius-md); border: 1px solid #bfdbfe;">
+        <div style="display: flex; align-items: center; gap: 0.9rem;">
+          <div class="user-avatar" style="background-color: {{ project.owner.profile.avatar_color|default:'#2563EB' }};">
+            {{ project.owner.profile.initials|default:project.owner.username|slice:":2"|upper }}
+          </div>
+          <div>
+            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">
+              {{ project.owner.get_full_name|default:project.owner.username }}
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(@{{ project.owner.username }})</span>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">
+              {{ project.owner.email }} · Created project on {{ project.created_at|date:"M d, Y" }}
+            </div>
+          </div>
+        </div>
+
+        <span class="badge" style="background: #dbeafe; color: #1e40af; font-weight: 700;">
+          Project Owner 👑
+        </span>
+      </div>
+
+      <!-- Team Members -->
+      {% for m in memberships %}
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
+          <div style="display: flex; align-items: center; gap: 0.9rem;">
+            <div class="user-avatar" style="background-color: {{ m.user.profile.avatar_color|default:'#4F46E5' }};">
+              {{ m.user.profile.initials|default:m.user.username|slice:":2"|upper }}
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">
+                {{ m.user.get_full_name|default:m.user.username }}
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal;">(@{{ m.user.username }})</span>
+              </div>
+              <div style="font-size: 0.78rem; color: var(--text-muted);">
+                {{ m.user.email }} · Joined {{ m.joined_at|date:"M d, Y" }}
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="badge badge-medium">
+              {{ m.get_role_display }}
+            </span>
+
+            {% if can_manage and m.user != user %}
+              <form action="{% url 'project_member_remove' project.id m.id %}" method="POST" onsubmit="return confirm('Remove {{ m.user.username }} from this project? Their assigned tasks will become unassigned.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm" title="Remove member">
+                  Remove
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <div class="empty-state" style="padding: 2.5rem 1rem;">
+          <p class="empty-state-text">No additional members added yet. Use the form on the right to invite registered users!</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Right Side: Add Member Form (if authorized) -->
+  {% if can_manage %}
+    <div class="card">
+      <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+        Add Team Member
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Select from registered users in your workspace to grant project access.
+      </p>
+
+      {% if form.fields.user.queryset.count > 0 %}
+        <form method="POST">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.user.id_for_label }}">Select User *</label>
+            {{ form.user }}
+            {% if form.user.errors %}
+              <div class="form-error">{{ form.user.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="{{ form.role.id_for_label }}">Assign Role *</label>
+            {{ form.role }}
+            {% if form.role.errors %}
+              <div class="form-error">{{ form.role.errors.0 }}</div>
+            {% endif %}
+            <div class="form-help">
+              <strong>Admin:</strong> Can edit project & manage tasks.<br>
+              <strong>Member:</strong> Can create, move, and comment on tasks.<br>
+              <strong>Viewer:</strong> Read-only access to boards & discussions.
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+            <span>＋</span> Add to Project
+          </button>
+        </form>
+      {% else %}
+        <div style="text-align: center; padding: 1.5rem; background: #f8fafc; border-radius: var(--radius-md); border: 1px dashed var(--border-color); font-size: 0.85rem; color: var(--text-muted);">
+          All registered users are already members of this project.
+        </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="card" style="background: #f8fafc;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Permissions Notice</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+        Only project owners and administrators have permission to invite or remove members.
+      </p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

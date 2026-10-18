@@ -1,0 +1,48 @@
+<div class="task-card" data-task-id="{{ task.id }}" data-status="{{ task.status }}" draggable="true">
+  <div class="card-top">
+    <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+    
+    <!-- Accessible Status Select for Mobile & Screen Readers -->
+    <select class="card-quick-status" title="Change task status">
+      <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option>
+      <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+      <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+    </select>
+  </div>
+
+  <div class="card-title">
+    <a href="{% url 'task_detail' task.id %}">{{ task.title }}</a>
+  </div>
+
+  {% if task.description %}
+    <p class="card-desc">{{ task.description }}</p>
+  {% endif %}
+
+  <div class="card-footer">
+    <div class="card-footer-left">
+      {% if task.due_date %}
+        <span class="due-pill {% if task.is_overdue %}overdue{% elif task.is_due_soon %}soon{% endif %}" title="Due date: {{ task.due_date|date:'Y-m-d' }}">
+          📅 {{ task.due_date|date:"M d" }}
+        </span>
+      {% endif %}
+
+      {% if task.comment_count > 0 %}
+        <span class="comments-count-pill" title="{{ task.comment_count }} comment(s)">
+          💬 {{ task.comment_count }}
+        </span>
+      {% endif %}
+    </div>
+
+    <div>
+      {% if task.assignee %}
+        <div class="user-avatar user-avatar-sm" style="background-color: {{ task.assignee.profile.avatar_color|default:'#2563EB' }};" title="Assigned to {{ task.assignee.get_full_name|default:task.assignee.username }}">
+          {{ task.assignee.profile.initials|default:task.assignee.username|slice:":2"|upper }}
+        </div>
+      {% else %}
+        <span style="font-size: 0.72rem; color: var(--text-light); border: 1px dashed var(--border-color); border-radius: var(--radius-sm); padding: 0.1rem 0.35rem;" title="Unassigned">
+          Unassigned
+        </span>
+      {% endif %}
+    </div>
+  </div>
+</div>

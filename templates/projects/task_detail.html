@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ task.title }} | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+      <a href="{% url 'project_board' project.id %}" style="font-size: 0.88rem; color: var(--text-muted);">
+        ← Back to {{ project.title }} Board
+      </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+      <h1 class="page-title">{{ task.title }}</h1>
+      <span class="badge badge-{{ task.priority }}">{{ task.get_priority_display }}</span>
+      <span class="badge badge-status-{{ task.status }}">{{ task.get_status_display }}</span>
+    </div>
+  </div>
+
+  <div class="header-actions">
+    {% if can_edit %}
+      <a href="{% url 'task_edit' task.id %}" class="btn btn-secondary">
+        <span>✏️</span> Edit Task
+      </a>
+    {% endif %}
+    {% if can_delete %}
+      <a href="{% url 'task_delete' task.id %}" class="btn btn-outline-danger">
+        <span>🗑️</span> Delete
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+  <!-- Left Side: Task Description & Comments Section -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    <!-- Description Card -->
+    <div class="card">
+      <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;">
+        Description & Details
+      </h2>
+      <div style="color: var(--text-secondary); line-height: 1.6; white-space: pre-line; font-size: 0.95rem;">
+        {{ task.description|default:"No description has been provided for this task." }}
+      </div>
+    </div>
+
+    <!-- Comments & Discussion Thread -->
+    <div class="card" id="comments">
+      <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">
+        Task Discussion ({{ comments|length }})
+      </h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+        Communicate, share updates, and collaborate directly on this task.
+      </p>
+
+      <!-- Add Comment Form -->
+      <form action="{% url 'task_comment_add' task.id %}" method="POST" style="margin-bottom: 2rem;">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          {{ comment_form.content }}
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-primary btn-sm">
+            Post Comment
+          </button>
+        </div>
+      </form>
+
+      <!-- Chronological Comments Stream -->
+      {% if comments %}
+        <div class="comment-thread">
+          {% for comment in comments %}
+            <div class="comment-item">
+              <div class="user-avatar" style="background-color: {{ comment.author.profile.avatar_color|default:'#2563EB' }};">
+                {{ comment.author.profile.initials|default:comment.author.username|slice:":2"|upper }}
+              </div>
+              <div class="comment-bubble">
+                <div class="comment-header">
+                  <div>
+                    <span class="comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</span>
+                    {% if comment.author == task.assignee %}
+                      <span class="badge badge-low" style="font-size: 0.65rem; margin-left: 0.25rem;">Assignee</span>
+                    {% endif %}
+                    {% if comment.author == project.owner %}
+                      <span class="badge badge-low" style="font-size: 0.65rem; margin-left: 0.25rem;">Owner</span>
+                    {% endif %}
+                  </div>
+
+                  <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                    {% if comment.author == user or can_manage %}
+                      <form action="{% url 'task_comment_delete' comment.id %}" method="POST" onsubmit="return confirm('Delete this comment?');">
+                        {% csrf_token %}
+                        <button type="submit" style="background: none; border: none; cursor: pointer; color: var(--danger); font-size: 0.75rem;" title="Delete comment">
+                          Delete
+                        </button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="comment-content">
+                  {{ comment.content }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.88rem; background: #f8fafc; border-radius: var(--radius-md);">
+          No discussion yet. Be the first to leave an update or feedback!
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Side: Task Metadata & Quick Status Changer -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <div class="card">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">
+        Task Information
+      </h3>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.88rem;">
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">
+            Assignee
+          </span>
+          {% if task.assignee %}
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <div class="user-avatar user-avatar-sm" style="background-color: {{ task.assignee.profile.avatar_color|default:'#2563EB' }};">
+                {{ task.assignee.profile.initials|default:task.assignee.username|slice:":2"|upper }}
+              </div>
+              <span style="font-weight: 600; color: var(--text-primary);">
+                {{ task.assignee.get_full_name|default:task.assignee.username }}
+              </span>
+            </div>
+          {% else %}
+            <span style="color: var(--text-muted);">Unassigned</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">
+            Status
+          </span>
+          <!-- Dynamic Status select -->
+          <select id="taskStatusSelect" class="form-select" style="font-size: 0.88rem; padding: 0.4rem 0.6rem;">
+            <option value="todo" {% if task.status == 'todo' %}selected{% endif %}>To Do</option>
+            <option value="in_progress" {% if task.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+            <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+          </select>
+        </div>
+
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">
+            Due Date
+          </span>
+          {% if task.due_date %}
+            <span class="due-pill {% if task.is_overdue %}overdue{% elif task.is_due_soon %}soon{% endif %}" style="font-size: 0.85rem; padding: 0.25rem 0.65rem;">
+              📅 {{ task.due_date|date:"F d, Y" }}
+              {% if task.is_overdue %} (Overdue){% endif %}
+            </span>
+          {% else %}
+            <span style="color: var(--text-muted);">No deadline set</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">
+            Project
+          </span>
+          <a href="{% url 'project_board' project.id %}" style="font-weight: 600;">
+            {{ project.title }}
+          </a>
+        </div>
+
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">
+            Created By
+          </span>
+          <span style="color: var(--text-primary);">{{ task.creator.username }} on {{ task.created_at|date:"M d, Y" }}</span>
+        </div>
+
+        <div>
+          <span style="color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 0.25rem;">
+            Last Updated
+          </span>
+          <span style="color: var(--text-muted);">{{ task.updated_at|timesince }} ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('taskStatusSelect')?.addEventListener('change', async (e) => {
+    const newStatus = e.target.value;
+    try {
+      const response = await fetch('/tasks/{{ task.id }}/move/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (response.ok) {
+        window.location.reload();
+      }
+    } catch(err) {
+      alert('Failed to update status');
+    }
+  });
+</script>
+{% endblock %}

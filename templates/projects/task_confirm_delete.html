@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Task | TaskFlow{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 3rem auto;">
+  <div class="card" style="border-color: var(--danger-border); box-shadow: var(--shadow-lg);">
+    <div style="font-size: 2.5rem; text-align: center; margin-bottom: 1rem;">⚠️</div>
+    <h1 style="font-size: 1.35rem; font-weight: 700; color: #991b1b; text-align: center; margin-bottom: 0.75rem;">
+      Delete Task Confirmation
+    </h1>
+    <p style="color: var(--text-secondary); text-align: center; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">
+      Are you sure you want to permanently delete the task <strong>"{{ task.title }}"</strong> from project <strong>"{{ task.project.title }}"</strong>?
+      All associated discussions and comments will be permanently erased.
+    </p>
+
+    <form method="POST">
+      {% csrf_token %}
+      <div style="display: flex; justify-content: center; gap: 1rem;">
+        <a href="{% url 'task_detail' task.id %}" class="btn btn-secondary">
+          Cancel, Keep Task
+        </a>
+        <button type="submit" class="btn btn-danger">
+          Yes, Delete Task
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

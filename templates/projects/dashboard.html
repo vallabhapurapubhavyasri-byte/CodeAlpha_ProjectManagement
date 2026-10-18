@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Welcome back, {{ user.first_name|default:user.username }}! 👋</h1>
+    <p class="page-subtitle">Here is a summary of your workspace, active projects, and assigned priorities.</p>
+  </div>
+  <div class="header-actions">
+    <a href="{% url 'project_create' %}" class="btn btn-primary">
+      <span>＋</span> New Project
+    </a>
+    <a href="{% url 'my_tasks' %}" class="btn btn-secondary">
+      <span>✓</span> View My Tasks
+    </a>
+  </div>
+</div>
+
+<!-- Key Stat Cards Grid -->
+<div class="stat-grid">
+  <!-- Projects Accessible -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-blue">📁</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_projects }}</div>
+      <div class="stat-label">Total Projects</div>
+      <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+        {{ owned_projects_count }} owned · {{ member_projects_count }} joined
+      </div>
+    </div>
+  </div>
+
+  <!-- Assigned Tasks -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-purple">🎯</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ total_assigned_tasks }}</div>
+      <div class="stat-label">My Assigned Tasks</div>
+      <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+        Across all active projects
+      </div>
+    </div>
+  </div>
+
+  <!-- In Progress Tasks -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-amber">⚡</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ tasks_in_progress }}</div>
+      <div class="stat-label">Tasks In Progress</div>
+      <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+        {{ tasks_todo }} waiting in To Do
+      </div>
+    </div>
+  </div>
+
+  <!-- Completed Tasks -->
+  <div class="stat-card">
+    <div class="stat-icon-wrapper stat-icon-green">✅</div>
+    <div class="stat-info">
+      <div class="stat-value">{{ tasks_completed }}</div>
+      <div class="stat-label">Completed Tasks</div>
+      <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+        Delivered successfully
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue / Deadlines -->
+  {% if overdue_count > 0 %}
+  <div class="stat-card" style="border-color: var(--danger-border); background: #fff5f5;">
+    <div class="stat-icon-wrapper stat-icon-red">⚠️</div>
+    <div class="stat-info">
+      <div class="stat-value" style="color: var(--danger);">{{ overdue_count }}</div>
+      <div class="stat-label" style="color: var(--danger-text);">Overdue Tasks</div>
+      <div style="font-size: 0.72rem; color: #b91c1c; margin-top: 0.2rem;">
+        Requires immediate attention
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Main Dashboard Split: Recent Projects & Upcoming Tasks / Notifications -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+  <!-- Left Column: Projects & Active Tasks -->
+  <div style="display: flex; flex-direction: column; gap: 2rem;">
+    <!-- Recently Updated Projects -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Recently Updated Projects</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Collaborative group boards you have access to</p>
+        </div>
+        <a href="{% url 'project_list' %}" class="btn btn-secondary btn-sm">View All ({{ total_projects }})</a>
+      </div>
+
+      {% if recent_projects %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+          {% for p in recent_projects %}
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.15rem; background: #ffffff; display: flex; flex-direction: column; justify-content: space-between; transition: var(--transition);" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='var(--border-color)'">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                  <span class="badge badge-status-{{ p.status }}">{{ p.get_status_display }}</span>
+                  <span style="font-size: 0.75rem; color: var(--text-muted);">
+                    {% if p.owner == user %}Owner{% else %}Member{% endif %}
+                  </span>
+                </div>
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem;">
+                  <a href="{% url 'project_board' p.id %}">{{ p.title }}</a>
+                </h3>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 1rem;">
+                  {{ p.description|default:"No description provided." }}
+                </p>
+              </div>
+
+              <div>
+                <!-- Progress -->
+                <div style="margin-bottom: 0.75rem;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.25rem;">
+                    <span>Tasks Completed</span>
+                    <span>{{ p.completed_tasks_count }}/{{ p.total_tasks_count }} ({{ p.progress_percentage }}%)</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: {{ p.progress_percentage }}%;"></div>
+                  </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 0.65rem;">
+                  <a href="{% url 'project_board' p.id %}" class="btn btn-secondary btn-sm" style="width: 100%; text-align: center;">
+                    Open Kanban Board →
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📁</div>
+          <div class="empty-state-title">No projects yet</div>
+          <p class="empty-state-text">Get started by creating your first group project or ask a team member to invite you.</p>
+          <a href="{% url 'project_create' %}" class="btn btn-primary">Create Your First Project</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Upcoming Deadlines -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">Upcoming Deadlines</h2>
+          <p style="font-size: 0.82rem; color: var(--text-muted);">Tasks due in the next 7 days</p>
+        </div>
+        <a href="{% url 'my_tasks' %}" class="btn btn-secondary btn-sm">All My Tasks</a>
+      </div>
+
+      {% if upcoming_tasks %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for t in upcoming_tasks %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #ffffff;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="badge badge-{{ t.priority }}">{{ t.get_priority_display }}</span>
+                <div>
+                  <a href="{% url 'task_detail' t.id %}" style="font-weight: 600; font-size: 0.92rem; color: var(--text-primary);">
+                    {{ t.title }}
+                  </a>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    Project: <a href="{% url 'project_board' t.project.id %}">{{ t.project.title }}</a>
+                  </div>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <span class="due-pill {% if t.is_due_soon %}soon{% endif %}">
+                  📅 {{ t.due_date|date:"M d, Y" }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem;">
+          ✨ No pressing deadlines in the next 7 days. You're fully caught up!
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right Column: Recent Activity & Quick Actions -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Quick Actions Card -->
+    <div class="card" style="background: linear-gradient(135deg, #eff6ff, #f8fafc); border-color: #bfdbfe;">
+      <h3 style="font-size: 1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 0.75rem;">Quick Actions</h3>
+      <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+        <a href="{% url 'project_create' %}" class="btn btn-primary" style="justify-content: flex-start;">
+          <span>＋</span> Create Group Project
+        </a>
+        <a href="{% url 'my_tasks' %}" class="btn btn-secondary" style="justify-content: flex-start;">
+          <span>✓</span> View Tasks Assigned to Me
+        </a>
+        <a href="{% url 'notifications_list' %}" class="btn btn-secondary" style="justify-content: flex-start;">
+          <span>🔔</span> Check All Notifications
+        </a>
+      </div>
+    </div>
+
+    <!-- Recent Notifications -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">Recent Notifications</h3>
+        <a href="{% url 'notifications_list' %}" style="font-size: 0.78rem;">View All</a>
+      </div>
+
+      {% if recent_notifications %}
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for n in recent_notifications %}
+            <div style="padding: 0.65rem 0.75rem; border-radius: var(--radius-sm); background: {% if not n.is_read %}#eff6ff{% else %}#f8fafc{% endif %}; border: 1px solid {% if not n.is_read %}#bfdbfe{% else %}#f1f5f9{% endif %}; font-size: 0.82rem;">
+              <div style="color: var(--text-primary); margin-bottom: 0.25rem;">
+                <strong>{{ n.actor.username|default:"System" }}</strong> {{ n.verb }}
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; color: var(--text-muted);">
+                <span>{{ n.created_at|timesince }} ago</span>
+                {% if n.link %}
+                  <a href="{% url 'notification_mark_read' n.id %}" style="font-weight: 600;">View →</a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
+          No notifications yet.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

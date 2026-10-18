@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Account Profile | TaskFlow{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Profile & Settings</h1>
+    <p class="page-subtitle">Manage your personal workspace details and account preferences.</p>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: start;">
+  <!-- Left Side: User Card & Stats -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <div class="card" style="text-align: center;">
+      <div class="user-avatar user-avatar-lg" style="margin: 0 auto 1rem; background-color: {{ profile.avatar_color|default:'#2563EB' }};">
+        {{ profile.initials|default:user.username|slice:":2"|upper }}
+      </div>
+      <h2 style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem;">
+        {{ user.get_full_name|default:user.username }}
+      </h2>
+      <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-bottom: 0.5rem;">
+        {{ profile.job_title|default:"Team Member" }}
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        Member since {{ user.date_joined|date:"F Y" }}
+      </p>
+
+      {% if profile.bio %}
+        <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; text-align: left; background: #f8fafc; padding: 0.85rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          {{ profile.bio }}
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- Stats Card -->
+    <div class="card">
+      <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">
+        Activity Metrics
+      </h3>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: var(--text-muted);">Owned Projects</span>
+          <strong>{{ user_stats.owned_projects }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: var(--text-muted);">Member Projects</span>
+          <strong>{{ user_stats.member_projects }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem;">
+          <span style="color: var(--text-muted);">Assigned Tasks</span>
+          <strong>{{ user_stats.assigned_tasks }}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Tasks Delivered</span>
+          <strong style="color: var(--success);">{{ user_stats.completed_tasks }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Edit Profile Form -->
+  <div class="card">
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+      Edit Profile Information
+    </h2>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+      Keep your team contact information and role updated.
+    </p>
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div class="form-group">
+          <label class="form-label" for="{{ form.first_name.id_for_label }}">First name</label>
+          {{ form.first_name }}
+          {% if form.first_name.errors %}
+            <div class="form-error">{{ form.first_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="{{ form.last_name.id_for_label }}">Last name</label>
+          {{ form.last_name }}
+          {% if form.last_name.errors %}
+            <div class="form-error">{{ form.last_name.errors.0 }}</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.email.id_for_label }}">Email address</label>
+        {{ form.email }}
+        {% if form.email.errors %}
+          <div class="form-error">{{ form.email.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.job_title.id_for_label }}">Job Title / Role</label>
+        {{ form.job_title }}
+        {% if form.job_title.errors %}
+          <div class="form-error">{{ form.job_title.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.bio.id_for_label }}">Bio / About Me</label>
+        {{ form.bio }}
+        {% if form.bio.errors %}
+          <div class="form-error">{{ form.bio.errors.0 }}</div>
+        {% endif %}
+        <div class="form-help">Tell your team a little about your responsibilities and focus areas.</div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color);">
+        <button type="submit" class="btn btn-primary">
+          Save Profile Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
